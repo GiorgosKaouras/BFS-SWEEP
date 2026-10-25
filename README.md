@@ -1,50 +1,54 @@
-Οδηγίες χρήσης:
-• Εκτέλεσε το πρόγραμμα σε Python 3.
-• Όταν ζητηθεί, δώσε τη διαδρομή του αρχείου world.txt που θέλεις να αναλύσεις.
-• Όταν ζητηθεί, δώσε την στρατηγική κίνησης στον κόσμο (BFS/Sweep).
-	
-Το πρόγραμμα θα:
-   1) Διαβάζει το περιεχόμενο του αρχείου/κόσμου,
-   2) Συλλέγει όλα τα αντικείμενα με βάση την στρατηγική κίνησης, 
-   3) Εμφανίζει την κατάσταση του κόσμου κάθε φορά που συλλέγει ένα αντικείμενο,
-   4) Εμφανίζει τα βήματα, την θέση του ρομπότ, το σκορ και την στρατηγική κίνησης ανά 10 βήματα,
-   5) Εμφανίζει το τελικό σκορ, τα συνολικά βήματα, την στρατηγική κίνησης, καθώς και την αιτία τερματισμού του προγράμματος.
+# Autonomous Robot Grid Navigation: BFS vs. Sweep
 
-Σημειώσεις:
-  • Το ρομπότ ξεκινά πάντα από τη θέση (0,0).
-  • Το πρόγραμμα πρέπει να δέχεται κόσμο ο οποίος αποτελείται από:
-    Διαστάσεις: Ακριβώς 10 γραμμές και 10 στήλες.
-  • Με τη στρατηγική sweep μπορούν να υλοποιηθεί το πρόγραμμα με απλά μόνο πλέγματα.
+An autonomous robot pathfinding and exploration simulation built in Python 3. The agent operates on a 10x10 discrete 2D grid with obstacles, aiming to collect scattered items using two distinct movement algorithms: **Breadth-First Search (BFS)** and a **Heuristic Serpentine Sweep**.
 
-Σύμβολα:
-. : Άδειος χώρος
-# : Εμπόδιο (απροσπέλαστο)
-* : Αντικείμενο προς συλλογή
+---
 
+## Overview
 
-Παράδειγμα τέτοιου κόσμου είναι το εξής: 
+The robot starts at coordinate `(0, 0)` and navigates an environment populated with obstacles and collectible items. The program reads a custom `.txt` world file, parses the grid, executes the chosen exploration strategy, and tracks real-time telemetry (steps, robot coordinates, score, and termination conditions).
+
+### Key Features
+* **Dual Navigation Modes:** Switch between optimal graph search (BFS) and deterministic area coverage (Sweep).
+* **Dynamic Telemetry:** Prints periodic status updates every 10 steps and whenever an item is collected.
+* **Autonomous Obstacle Handling:** Dedicated rerouting logic for bypassing non-traversable cells during continuous scanning.
+
+---
+
+## Movement Strategies
+
+### 1. Breadth-First Search (BFS)
+* Computes the **shortest unweighted path** to the nearest collectible item (`*`) using a queue data structure (`collections.deque`).
+* Ensures optimal step efficiency while navigating around obstacles (`#`).
+* Repeats iteratively from the robot's current position to the next nearest target.
+* **Termination:** All items are successfully collected, no path is reachable, or the hard execution limit of **80 steps** is reached.
+
+### 2. Serpentine Sweep (Boustrophedon Coverage)
+* Explores the grid systematically row-by-row in an alternating horizontal pattern (left-to-right, then right-to-left).
+* Shifts down to the subsequent row upon hitting a grid boundary.
+* **Obstacle Handling (`sweep_obstacle`):** When encountering a barrier (`#`), the robot dynamically routes up or down to bypass the obstacle and returns to its original row trajectory once the path clears.
+
+---
+
+## Grid Specification
+
+The environment is represented as a text file (`world.txt`) with exactly **10 rows and 10 columns**:
+
+| Symbol | Description | Traversable |
+| :---: | :--- | :---: |
+| `.` | Free space | Yes |
+| `#` | Obstacle | No |
+| `*` | Collectible Item | Yes |
+
+### Sample `world.txt` Layout
+```text
 . . . . . . . . . .
 . # # . . . * . . .
-. . . . # . . . . .
-. * . . # . . . . .
+. . . . . # . . . .
+. . * . . # . . . .
 . . . . . . . # . .
 . . # # # . . # . .
 . . . . . . . . . .
-. . * . . . . . . .
-. . . . . # # . . .
-. . . . . . . . . *
-
-Οι δύο στρατηγικές κίνησης και ο τρόπος υλοποίησης τους:
-1)BFS: 
-     • Υπολογίζει την συντομότερη διαδρόμη προς το πλησιέστερο αντικείμενο χρησιμοποιώντας ουρά(deque).
-     • Το ρομπότ ακολουθεί αυτή τη διαδρομή μέχρι να φτάσει στο κελί που περιέχει το αντικείμενο.
-     • Επαναλαμβάνει την διαδικασία μέχρις ότου συλλεχθούν όλα τα αντικείμενα ή να πραγματοποιηθούν 80 βήματα.
-2)Sweep:
-     • Το ρομπότ κινείται οριζόντια σε κάθε γραμμή.
-     • Όταν φτάσει στην άκρη, κατεβαίνει στην επόμενη σειρά και αλλάζει κατεύθυνση (από αριστέρα/δεξιά σε δεξία/αριστερά).
-     • Αν συναντήσει εμπόδιο # ενεργοποιείται η συνάρτηση sweep_obstacle η οποία αναζητά εναλλακτική διαδρομή (πάνω ή κάτω).
-     • Το ρομπότ προσπερνά το εμπόδιο, συνεχίζει τη σάρωση και επιστρέφει στην προηγούμενη σειρά που βρισκόταν όταν είναι εφικτό (μη ύπαρξη εμποδίου κατά την επιστροφή άνοδο/κάθοδο).
-
-Απαιτήσεις:
-  • Περιβάλλον Python έκδοσης 3.x
-  • Αρχείο κειμένου .txt σε κωδικοποίηση UTF-8
+. . . . * . . . . .
+. . . . . . # # . .
+. . . . . . . . * .
